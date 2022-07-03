@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { lastValueFrom, Observable, Subject, bufferWhen, map, shareReplay, filter, pipe } from 'rxjs';
+import { Observable, Subject, bufferWhen, map, shareReplay, filter, pipe, switchMap, zip, of, lastValueFrom } from 'rxjs';
 import { IFilmResponseItem, ISwapiResponse, IPeopleResponseItem, IStarshipResponseItem, ISpeciesResponseItem } from '../models/swapi-response.model';
 
 enum SwapiRequestType {
@@ -80,8 +80,23 @@ export class SwapiService {
     return this.filmsObservable;
   }
 
-  public getPersonObservable(characterUrl: string): Observable<IPeopleResponseItem> {
-    return this.http.get<IPeopleResponseItem>(characterUrl);
+  public getPersonObservable(id: string): Observable<IPeopleResponseItem> {
+    const url = `${ApiUrlMap[SwapiRequestType.People]}/${id}`
+    return this.http.get<IPeopleResponseItem>(url).pipe(
+      switchMap(person => {
+        console.log(person)
+        const speciesObservables = person.species.length ? zip(...person.species.map(specie => this.http.get<ISpeciesResponseItem>(specie))) : of([]);
+        const filmsObservables = person.films.length ? zip(...person.films.map(film => this.http.get<IFilmResponseItem>(film))) : of([]);
+        const starshipObservables = person.starships.length ? zip(...person.starships.map(starship => this.http.get<IStarshipResponseItem>(starship))) : of([]);
+        return zip(speciesObservables, filmsObservables, starshipObservables, of(person))
+      }),
+      map(([species, films, starships, person]) => ({
+        ...person,
+        species: species.map(specie => specie.name),
+        films: films.map(film => film.title),
+        starships: starships.map(starship => starship.name),
+      }))
+    );
   }
 
   private getPagesItems<T>(type: SwapiRequestType): Observable<T[]> {

@@ -1,0 +1,8 @@
+<div *ngIf="(personObservable | async) as person">
+  <ul *ngIf="person">
+    <li>Name: {{person.name}}</li>
+    <li>Species: {{person.species}}</li>
+    <li>Movies: {{person.films}}</li>
+    <li>Spaceships: {{person.starships}}</li>
+  </ul>
+</div>
