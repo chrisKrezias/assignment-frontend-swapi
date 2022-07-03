@@ -1,7 +1,6 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, Observable, of, switchMap } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { IPeopleResponseItem } from '../../models/swapi-response.model';
 import { SwapiService } from '../../services/swapi.service';
 
@@ -23,10 +22,6 @@ export class CharacterDetailsComponent {
       switchMap(paramMap => {
         const id = paramMap.get("id");
         return id ? this.swapiService.getPersonObservable(id) : of(null);
-      }),
-      catchError((error: HttpErrorResponse) => {
-        this.showError = true;
-        return of(null);
       })
     )
   }

@@ -64,7 +64,8 @@ export class CharactersListComponent {
       this.swapiService.getPeopleObservable(),
       this.filters.valueChanges.pipe(
         tap(values => {
-          this.showClearAllIcon = !Object.values(values).every(value => value === AllOption.value)
+          this.showClearAllIcon = !Object.values(values).every(value => value === AllOption.value);
+          this.activePageSubject.next(1)
         }),
         startWith(this.filters.value))
     ]).pipe(map(([people, { film, specie, fromBirthDate, toBirthDate }]) => {
