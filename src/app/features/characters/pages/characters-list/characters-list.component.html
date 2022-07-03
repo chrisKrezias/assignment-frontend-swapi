@@ -1,20 +1,42 @@
-<form [formGroup]="filters">
-  <select formControlName="specie">
-    <option *ngFor="let option of speciesOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
-  </select>
-  <select formControlName="film">
-    <option *ngFor="let option of filmsOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
-  </select>
-  <select formControlName="fromBirthDate">
-    <option *ngFor="let option of fromBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
-  </select>
-  <select formControlName="toBirthDate">
-    <option *ngFor="let option of toBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
-  </select>
-</form>
+<div class="sidebar" [ngClass]="{'open': isSidebarVisible}">
+  <button class="close-btn" (click)="isSidebarVisible = false">x</button>
+  <form class="d-flex flex-column" [formGroup]="filters">
+    <div class="form-group mx-2">
+      <label for="specie">Specie:</label>
+      <select class="form-control" name="specie" formControlName="specie">
+        <option *ngFor="let option of speciesOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+      </select>
+    </div>
+    <div class="form-group mx-2">
+      <label for="film">Film:</label>
+      <select class="form-control" name="film" formControlName="film">
+        <option *ngFor="let option of filmsOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+      </select>
+    </div>
+    <div class="form-group mx-2">
+      <label for="fromBirthDate">From birth date:</label>
+      <select class="form-control" name="fromBirthDate" formControlName="fromBirthDate">
+        <option *ngFor="let option of fromBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+      </select>
+    </div>
+    <div class="form-group mx-2">
+      <label for="toBirthDate">To birth date:</label>
+      <select class="form-control" name="toBirthDate" formControlName="toBirthDate">
+        <option *ngFor="let option of toBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+      </select>
+    </div>
+  </form>
+</div>
 
-<ul>
-  <li *ngFor="let person of peopleObservable | async">
-    <a [routerLink]="person.id">{{person.name}}</a>
-  </li>
-</ul>
+<div class="main" [ngClass]="{'open-sidebar': isSidebarVisible}">
+  <button *ngIf="!isSidebarVisible" class="open-btn" (click)="isSidebarVisible = true">☰ Open Filters</button>
+  <ul *ngIf="(peopleObservable | async) as people;else loading">
+    <li *ngFor="let person of people">
+      <a [routerLink]="person.id">{{person.name}}</a>
+    </li>
+  </ul>
+</div>
+
+<ng-template #loading>
+  ...Loading
+</ng-template>

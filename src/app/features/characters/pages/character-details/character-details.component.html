@@ -1,8 +1,16 @@
-<div *ngIf="(personObservable | async) as person">
-  <ul *ngIf="person">
+<ng-container *ngIf="!showError; else error">
+  <ul *ngIf="(personObservable | async) as person; else loading">
     <li>Name: {{person.name}}</li>
     <li>Species: {{person.species}}</li>
     <li>Movies: {{person.films}}</li>
     <li>Spaceships: {{person.starships}}</li>
   </ul>
-</div>
+</ng-container>
+
+<ng-template #loading>
+  ...Loading
+</ng-template>
+
+<ng-template #error>
+  Not Found
+</ng-template>

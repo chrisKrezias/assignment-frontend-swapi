@@ -1,6 +1,7 @@
+import { IPeopleListItem } from './../models/swapi-response.model';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, Subject, bufferWhen, map, shareReplay, filter, pipe, switchMap, zip, of, lastValueFrom } from 'rxjs';
+import { Observable, Subject, bufferWhen, map, shareReplay, filter, switchMap, zip, of, lastValueFrom } from 'rxjs';
 import { IFilmResponseItem, ISwapiResponse, IPeopleResponseItem, IStarshipResponseItem, ISpeciesResponseItem } from '../models/swapi-response.model';
 
 enum SwapiRequestType {
@@ -22,7 +23,7 @@ const ApiUrlMap: { [key in SwapiRequestType]: string } = {
 @Injectable()
 export class SwapiService {
   private pagesReceivedSubject: Subject<SwapiRequestType>;
-  private peopleObservable!: Observable<IPeopleResponseItem[]>;
+  private peopleObservable!: Observable<IPeopleListItem[]>;
   private speciesObservable!: Observable<ISpeciesResponseItem[]>;
   private starshipsObservable!: Observable<IStarshipResponseItem[]>;
   private filmsObservable!: Observable<IFilmResponseItem[]>;
@@ -31,7 +32,7 @@ export class SwapiService {
     this.pagesReceivedSubject = new Subject<SwapiRequestType>();
   }
 
-  public getPeopleObservable(): Observable<IPeopleResponseItem[]> {
+  public getPeopleObservable(): Observable<IPeopleListItem[]> {
     if (!this.peopleObservable) {
       this.peopleObservable = this.getPagesItems<IPeopleResponseItem>(SwapiRequestType.People).pipe(
         map(people =>
@@ -40,7 +41,7 @@ export class SwapiService {
           ).map(person => ({
             ...person,
             id: person.url.replace("https://swapi.dev/api/people/", "").replace("/", "")
-          }))
+          } as IPeopleListItem))
         )
       );
     }
@@ -84,7 +85,6 @@ export class SwapiService {
     const url = `${ApiUrlMap[SwapiRequestType.People]}/${id}`
     return this.http.get<IPeopleResponseItem>(url).pipe(
       switchMap(person => {
-        console.log(person)
         const speciesObservables = person.species.length ? zip(...person.species.map(specie => this.http.get<ISpeciesResponseItem>(specie))) : of([]);
         const filmsObservables = person.films.length ? zip(...person.films.map(film => this.http.get<IFilmResponseItem>(film))) : of([]);
         const starshipObservables = person.starships.length ? zip(...person.starships.map(starship => this.http.get<IStarshipResponseItem>(starship))) : of([]);

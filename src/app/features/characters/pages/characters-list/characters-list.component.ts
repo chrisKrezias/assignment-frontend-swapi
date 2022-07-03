@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { map, Observable, combineLatest, startWith, tap } from 'rxjs';
+import { map, Observable, combineLatest, startWith } from 'rxjs';
 import { ISelectOption } from '../../models/select-option.model';
-import { IPeopleResponseItem } from '../../models/swapi-response.model';
+import { IPeopleListItem } from '../../models/swapi-response.model';
 import { SwapiService } from '../../services/swapi.service';
 
 const AllOption: ISelectOption = {
@@ -18,12 +18,13 @@ const dateParser = (date: string) => parseFloat(date.replace("BBY", "").replace(
   styleUrls: ['./characters-list.component.scss']
 })
 export class CharactersListComponent {
-  public peopleObservable: Observable<IPeopleResponseItem[]>;
+  public peopleObservable: Observable<IPeopleListItem[]>;
   public speciesOptionsObservable: Observable<ISelectOption[]>;
   public filmsOptionsObservable: Observable<ISelectOption[]>;
   public fromBirthDateOptionsObservable: Observable<ISelectOption[]>;
   public toBirthDateOptionsObservable: Observable<ISelectOption[]>;
   public filters: FormGroup;
+  public isSidebarVisible = true;
 
   constructor(private swapiService: SwapiService, private fb: FormBuilder) {
     this.filters = this.getFilters();
@@ -43,8 +44,8 @@ export class CharactersListComponent {
         const birthDate = dateParser(person.birth_year);
         return (film === AllOption.value || person.films.includes(film))
           && (specie === AllOption.value || person.species.includes(specie))
-          && ((isNaN(birthDate) && isNaN(fromBirthDate)) || !fromBirthDate || birthDate >= fromBirthDate)
-          && (!toBirthDate || birthDate <= toBirthDate)
+          && ((isNaN(birthDate) && isNaN(fromBirthDate)) || fromBirthDate === AllOption.value || birthDate >= fromBirthDate)
+          && (toBirthDate === AllOption.value || birthDate <= toBirthDate)
       });
     }));
   }
@@ -110,7 +111,10 @@ export class CharactersListComponent {
           if (isNaN(b.value)) return -1;
           return a.value - b.value
         });
-        return options;
+        return [
+          AllOption,
+          ...options
+        ];
       })
     );
   }
@@ -121,7 +125,10 @@ export class CharactersListComponent {
       this.filters.controls["fromBirthDate"].valueChanges
     ]).pipe(map(([options, value]) => {
       const valueOptionIndex = options.findIndex(option => option.value.toString() === value);
-      return options.slice(valueOptionIndex + 1).filter(option => !isNaN(parseFloat(option.value.toString())));
+      return [
+        AllOption,
+        ...options.slice(valueOptionIndex + 1).filter(option => !isNaN(parseFloat(option.value.toString())))
+      ];
     }));
   }
 
@@ -129,8 +136,8 @@ export class CharactersListComponent {
     return this.fb.group({
       film: AllOption.value,
       specie: AllOption.value,
-      fromBirthDate: "",
-      toBirthDate: ""
+      fromBirthDate: AllOption.value,
+      toBirthDate: AllOption.value
     });
   }
 }

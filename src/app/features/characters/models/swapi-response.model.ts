@@ -11,7 +11,10 @@ export interface IPeopleResponseItem {
     starships: string[];
     films: string[];
     url: string;
-    id?: string;
+}
+
+export interface IPeopleListItem extends IPeopleResponseItem {
+    id: string;
 }
 
 export interface ISpeciesResponseItem {
