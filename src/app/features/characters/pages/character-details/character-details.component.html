@@ -1,12 +1,14 @@
-<a [routerLink]="'/'">Go to list</a>
+<a class="nav-btn" [routerLink]="'/'">Go to list</a>
 
 <ng-container *ngIf="!showError; else error">
-  <ul *ngIf="(personObservable | async) as person; else loading">
-    <li>Name: {{person.name}}</li>
-    <li>Species: {{person.species}}</li>
-    <li>Movies: {{person.films}}</li>
-    <li>Spaceships: {{person.starships}}</li>
-  </ul>
+  <div class="card mt-5">
+    <ul class="card-body" *ngIf="(personObservable | async) as person; else loading">
+      <li>Name: {{person.name}}</li>
+      <li>Species: {{person.species.length ? person.species : "No species found"}}</li>
+      <li>Movies: {{person.films.length ? person.films : "No films found"}}</li>
+      <li>Spaceships: {{person.starships.length ? person.starships : "No ships found"}}</li>
+    </ul>
+  </div>
 </ng-container>
 
 <ng-template #loading>
