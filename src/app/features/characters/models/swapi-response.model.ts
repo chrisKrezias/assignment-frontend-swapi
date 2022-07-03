@@ -10,6 +10,8 @@ export interface IPeopleResponseItem {
     species: string[];
     starships: string[];
     films: string[];
+    url: string;
+    id?: string;
 }
 
 export interface ISpeciesResponseItem {

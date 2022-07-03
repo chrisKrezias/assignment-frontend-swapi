@@ -5,7 +5,16 @@
   <select formControlName="film">
     <option *ngFor="let option of filmsOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
   </select>
-  <p *ngIf="(dateRangeObservable | async) as dateRange">{{dateRange.min?.label}} - {{dateRange.max?.label}}</p>
+  <select formControlName="fromBirthDate">
+    <option *ngFor="let option of fromBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+  </select>
+  <select formControlName="toBirthDate">
+    <option *ngFor="let option of toBirthDateOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+  </select>
 </form>
 
-<p>{{peopleObservable | async}}</p>
+<ul>
+  <li *ngFor="let person of peopleObservable | async">
+    {{person.name}}
+  </li>
+</ul>

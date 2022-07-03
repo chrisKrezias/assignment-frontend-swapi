@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { map, Observable, combineLatest, startWith } from 'rxjs';
+import { map, Observable, combineLatest, startWith, tap } from 'rxjs';
 import { ISelectOption } from '../../models/select-option.model';
 import { IPeopleResponseItem } from '../../models/swapi-response.model';
 import { SwapiService } from '../../services/swapi.service';
@@ -9,6 +9,8 @@ const AllOption: ISelectOption = {
   value: "All",
   label: "All"
 }
+
+const dateParser = (date: string) => parseFloat(date.replace("BBY", "").replace("ABY", "")) * (date.includes("BBY") ? -1 : 1);
 
 @Component({
   selector: 'app-characters-list',
@@ -19,7 +21,8 @@ export class CharactersListComponent {
   public peopleObservable: Observable<IPeopleResponseItem[]>;
   public speciesOptionsObservable: Observable<ISelectOption[]>;
   public filmsOptionsObservable: Observable<ISelectOption[]>;
-  public dateRangeObservable: Observable<DateRange>;
+  public fromBirthDateOptionsObservable: Observable<ISelectOption[]>;
+  public toBirthDateOptionsObservable: Observable<ISelectOption[]>;
   public filters: FormGroup;
 
   constructor(private swapiService: SwapiService, private fb: FormBuilder) {
@@ -27,18 +30,22 @@ export class CharactersListComponent {
     this.peopleObservable = this.getPeopleObservable();
     this.speciesOptionsObservable = this.getSpeciesOptionsObservable();
     this.filmsOptionsObservable = this.getFilmsOptionsObservable();
-    this.dateRangeObservable = this.getDateRangeObservable();
+    this.fromBirthDateOptionsObservable = this.getFromBirthDatesOptionsObservable();
+    this.toBirthDateOptionsObservable = this.getToBirthDatesOptionsObservable();
   }
 
   private getPeopleObservable() {
     return combineLatest([
       this.swapiService.getPeopleObservable(),
       this.filters.valueChanges.pipe(startWith(this.filters.value))
-    ]).pipe(map(([people, { film, specie, dateRange }]) => {
-      return people.filter(person =>
-        (film === AllOption.value || person.films.includes(film))
-        && (specie === AllOption.value || person.species.includes(specie))
-      );
+    ]).pipe(map(([people, { film, specie, fromBirthDate, toBirthDate }]) => {
+      return people.filter(person => {
+        const birthDate = dateParser(person.birth_year);
+        return (film === AllOption.value || person.films.includes(film))
+          && (specie === AllOption.value || person.species.includes(specie))
+          && ((isNaN(birthDate) && isNaN(fromBirthDate)) || !fromBirthDate || birthDate >= fromBirthDate)
+          && (!toBirthDate || birthDate <= toBirthDate)
+      });
     }));
   }
 
@@ -92,34 +99,38 @@ export class CharactersListComponent {
     );
   }
 
-  private getDateRangeObservable(): Observable<DateRange> {
+  private getFromBirthDatesOptionsObservable(): Observable<ISelectOption[]> {
     return this.swapiService.getPeopleObservable().pipe(
       map(people => {
-        const dates = [...new Set(people.map(person => person.birth_year))].map(date => {
-          const dateNumber = parseInt(date.replace("BBY", "").replace("ABY", "")) * (date.includes("BBY") ? -1 : 1);
-          return {
-            label: date,
-            value: dateNumber
-          };
-        }).sort((a, b) => a.value - b.value);
-        return {
-          min: dates[0],
-          max: dates[dates.length - 1]
-        }
+        const options = [...new Set(people.map(person => person.birth_year))].map(date => ({
+          label: date,
+          value: dateParser(date)
+        })).sort((a, b) => {
+          if (isNaN(a.value)) return 1;
+          if (isNaN(b.value)) return -1;
+          return a.value - b.value
+        });
+        return options;
       })
     );
+  }
+
+  private getToBirthDatesOptionsObservable(): Observable<ISelectOption[]> {
+    return combineLatest([
+      this.fromBirthDateOptionsObservable,
+      this.filters.controls["fromBirthDate"].valueChanges
+    ]).pipe(map(([options, value]) => {
+      const valueOptionIndex = options.findIndex(option => option.value.toString() === value);
+      return options.slice(valueOptionIndex + 1).filter(option => !isNaN(parseFloat(option.value.toString())));
+    }));
   }
 
   private getFilters(): FormGroup {
     return this.fb.group({
       film: AllOption.value,
       specie: AllOption.value,
-      dateRange: ""
+      fromBirthDate: "",
+      toBirthDate: ""
     });
   }
-}
-
-interface DateRange {
-  min: ISelectOption | undefined;
-  max: ISelectOption | undefined;
 }

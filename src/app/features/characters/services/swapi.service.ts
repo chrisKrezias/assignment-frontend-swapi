@@ -33,7 +33,16 @@ export class SwapiService {
 
   public getPeopleObservable(): Observable<IPeopleResponseItem[]> {
     if (!this.peopleObservable) {
-      this.peopleObservable = this.getPagesItems<IPeopleResponseItem>(SwapiRequestType.People);
+      this.peopleObservable = this.getPagesItems<IPeopleResponseItem>(SwapiRequestType.People).pipe(
+        map(people =>
+          people.sort((a, b) =>
+            (a.name > b.name) ? 1 : -1
+          ).map(person => ({
+            ...person,
+            id: person.url.replace("https://swapi.dev/api/people/", "").replace("/", "")
+          }))
+        )
+      );
     }
 
     return this.peopleObservable;
