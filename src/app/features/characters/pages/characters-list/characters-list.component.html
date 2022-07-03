@@ -43,7 +43,7 @@
 <div class="main" [ngClass]="{'open-sidebar': isSidebarVisible}">
   <button *ngIf="!isSidebarVisible" class="open-btn unset-btn" (click)="isSidebarVisible = true"><i class="fa fa-bars" aria-hidden="true"></i> Open Filters</button>
   <div *ngIf="(peoplePageObservable | async) as people;else loading" class="d-flex flex-wrap justify-content-center">
-    <div *ngFor="let person of people" [routerLink]="person.id" class="card m-4">
+    <div *ngFor="let person of people" [routerLink]="'characters/' + person.id" class="card m-4">
       <div class="card-header">
         {{person.name}}
       </div>
