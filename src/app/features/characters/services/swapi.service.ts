@@ -41,7 +41,11 @@ export class SwapiService {
 
   public getSpeciesObservable(): Observable<ISpeciesResponseItem[]> {
     if (!this.speciesObservable) {
-      this.speciesObservable = this.getPagesItems<ISpeciesResponseItem>(SwapiRequestType.Species);
+      this.speciesObservable = this.getPagesItems<ISpeciesResponseItem>(SwapiRequestType.Species).pipe(
+        map(species => species.sort((a, b) =>
+          (a.name > b.name) ? 1 : -1
+        ))
+      );
     }
 
     return this.speciesObservable;
@@ -57,7 +61,11 @@ export class SwapiService {
 
   public getFilmsObservable(): Observable<IFilmResponseItem[]> {
     if (!this.filmsObservable) {
-      this.filmsObservable = this.getPagesItems<IFilmResponseItem>(SwapiRequestType.Films);
+      this.filmsObservable = this.getPagesItems<IFilmResponseItem>(SwapiRequestType.Films).pipe(
+        map(films => films.sort((a, b) =>
+          a.episode_id - b.episode_id
+        ))
+      );
     }
 
     return this.filmsObservable;

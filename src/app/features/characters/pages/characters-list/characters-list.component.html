@@ -1,1 +1,11 @@
-<p>characters works!</p>
+<form [formGroup]="filters">
+  <select formControlName="specie">
+    <option *ngFor="let option of speciesOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+  </select>
+  <select formControlName="film">
+    <option *ngFor="let option of filmsOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
+  </select>
+  <p *ngIf="(dateRangeObservable | async) as dateRange">{{dateRange.min?.label}} - {{dateRange.max?.label}}</p>
+</form>
+
+<p>{{peopleObservable | async}}</p>
