@@ -7,12 +7,14 @@ import { CharactersListComponent } from './pages/characters-list/characters-list
 import { SwapiService } from './services/swapi.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CharacterDetailsComponent } from './pages/character-details/character-details.component';
+import { LoaderComponent } from './components/loader/loader.component';
 
 
 @NgModule({
   declarations: [
     CharactersListComponent,
-    CharacterDetailsComponent
+    CharacterDetailsComponent,
+    LoaderComponent
   ],
   imports: [
     CommonModule,

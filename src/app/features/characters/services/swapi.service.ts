@@ -42,7 +42,8 @@ export class SwapiService {
             ...person,
             id: person.url.replace("https://swapi.dev/api/people/", "").replace("/", "")
           } as IPeopleListItem))
-        )
+        ),
+        shareReplay(1)
       );
     }
 
@@ -54,7 +55,8 @@ export class SwapiService {
       this.speciesObservable = this.getPagesItems<ISpeciesResponseItem>(SwapiRequestType.Species).pipe(
         map(species => species.sort((a, b) =>
           (a.name > b.name) ? 1 : -1
-        ))
+        )),
+        shareReplay(1)
       );
     }
 
@@ -74,7 +76,8 @@ export class SwapiService {
       this.filmsObservable = this.getPagesItems<IFilmResponseItem>(SwapiRequestType.Films).pipe(
         map(films => films.sort((a, b) =>
           a.episode_id - b.episode_id
-        ))
+        )),
+        shareReplay(1)
       );
     }
 
@@ -104,8 +107,7 @@ export class SwapiService {
     const subject = new Subject<T>();
     const observable = subject.asObservable().pipe(
       bufferWhen(() => this.pagesReceivedSubject.pipe(filter(receivedType => receivedType === type))),
-      map(collection => collection.flatMap(item => item)),
-      shareReplay(1)
+      map(collection => collection.flatMap(item => item))
     ) as Observable<T[]>;
     this.getPagesRecursion(apiUrl, type, subject);
     return observable;

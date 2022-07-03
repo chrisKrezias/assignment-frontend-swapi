@@ -1,14 +1,17 @@
 <div class="sidebar" [ngClass]="{'open': isSidebarVisible}">
-  <button class="close-btn" (click)="isSidebarVisible = false">x</button>
+  <button class="close-btn unset-btn" (click)="isSidebarVisible = false"><i class="fa fa-times sw-yellow" aria-hidden="true"></i></button>
+  <button *ngIf="showClearAllIcon" (click)="clearFilters()" class="clear-all-btn mx-2 unset-btn">
+    <i class="fa fa-times sw-yellow" aria-hidden="true"></i> Clear all filters
+  </button>
   <form class="d-flex flex-column" [formGroup]="filters">
     <div class="form-group mx-2">
-      <label for="specie">Specie:</label>
+      <label for="specie">Species:</label>
       <select class="form-control" name="specie" formControlName="specie">
         <option *ngFor="let option of speciesOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
       </select>
     </div>
     <div class="form-group mx-2">
-      <label for="film">Film:</label>
+      <label for="film">Films:</label>
       <select class="form-control" name="film" formControlName="film">
         <option *ngFor="let option of filmsOptionsObservable | async" value="{{option.value}}">{{option.label}}</option>
       </select>
@@ -26,17 +29,55 @@
       </select>
     </div>
   </form>
+  <p class="footnote mx-2">
+    May
+    <a href="https://www.linkedin.com/in/chris-krezias-a8776314b/" class="sw-yellow" target="_blank">Chris</a>
+    be with you!
+    <span class="social">
+      <a href="https://github.com/chrisKrezias/assignment-frontend-swapi" class="sw-yellow mx-1" target="_blank"><i class="fa fa-github" aria-hidden="true"></i></a>
+      <a href="https://www.linkedin.com/in/chris-krezias-a8776314b/" class="sw-yellow mx-1" target="_blank"><i class="fa fa-linkedin-square" aria-hidden="true"></i></a>
+    </span>
+  </p>
 </div>
 
 <div class="main" [ngClass]="{'open-sidebar': isSidebarVisible}">
-  <button *ngIf="!isSidebarVisible" class="open-btn" (click)="isSidebarVisible = true">☰ Open Filters</button>
-  <ul *ngIf="(peopleObservable | async) as people;else loading">
-    <li *ngFor="let person of people">
-      <a [routerLink]="person.id">{{person.name}}</a>
-    </li>
-  </ul>
+  <button *ngIf="!isSidebarVisible" class="open-btn unset-btn" (click)="isSidebarVisible = true"><i class="fa fa-bars" aria-hidden="true"></i> Open Filters</button>
+  <div *ngIf="(peoplePageObservable | async) as people;else loading" class="d-flex flex-wrap justify-content-center">
+    <div *ngFor="let person of people" [routerLink]="person.id" class="card m-4">
+      <div class="card-header">
+        {{person.name}}
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">Date of birth: {{person.birth_year}}</li>
+        <li class="list-group-item">Movies: {{person.films.length}}</li>
+      </ul>
+    </div>
+  </div>
+  <ng-container *ngIf="(paginationObservable | async) as pages">
+    <ng-container *ngIf="pages.length > 1">
+      <nav *ngIf="(activePageSubject | async) as activePage" class="d-flex justify-content-center" aria-label="Pagination">
+        <ul class="pagination">
+          <li class="page-item">
+            <a (click)="setActivePage(activePage === 1 ? activePage : activePage - 1)" class="page-link" href="javascript:void(0)">
+              <i class="fa fa-caret-left" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li *ngFor="let page of pages" class="page-item" [ngClass]="{'active': activePage === page}">
+            <a (click)="setActivePage(page)" class="page-link" href="javascript:void(0)">
+              {{page}}
+            </a>
+          </li>
+          <li class="page-item">
+            <a (click)="setActivePage(activePage === pages.length ? activePage : activePage + 1)" class="page-link" href="javascript:void(0)">
+              <i class="fa fa-caret-right" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </ng-container>
+  </ng-container>
 </div>
 
 <ng-template #loading>
-  ...Loading
+  <app-loader></app-loader>
 </ng-template>

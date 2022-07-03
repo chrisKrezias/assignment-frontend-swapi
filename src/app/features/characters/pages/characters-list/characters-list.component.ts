@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { map, Observable, combineLatest, startWith } from 'rxjs';
+import { map, Observable, combineLatest, startWith, tap, Subject, BehaviorSubject } from 'rxjs';
 import { ISelectOption } from '../../models/select-option.model';
 import { IPeopleListItem } from '../../models/swapi-response.model';
 import { SwapiService } from '../../services/swapi.service';
@@ -19,26 +19,54 @@ const dateParser = (date: string) => parseFloat(date.replace("BBY", "").replace(
 })
 export class CharactersListComponent {
   public peopleObservable: Observable<IPeopleListItem[]>;
+  public peoplePageObservable: Observable<IPeopleListItem[]>;
   public speciesOptionsObservable: Observable<ISelectOption[]>;
   public filmsOptionsObservable: Observable<ISelectOption[]>;
   public fromBirthDateOptionsObservable: Observable<ISelectOption[]>;
   public toBirthDateOptionsObservable: Observable<ISelectOption[]>;
   public filters: FormGroup;
-  public isSidebarVisible = true;
+  public isSidebarVisible: boolean;
+  public showClearAllIcon = false;
+  public showTooltip = false;
+  public paginationObservable: Observable<number[]>;
+  public activePageSubject = new BehaviorSubject<number>(1);
+
+  private initialFilterValues = {
+    film: AllOption.value,
+    specie: AllOption.value,
+    fromBirthDate: AllOption.value,
+    toBirthDate: AllOption.value
+  };
+  private MAX_PEOPLE_PER_PAGE = 12;
 
   constructor(private swapiService: SwapiService, private fb: FormBuilder) {
     this.filters = this.getFilters();
     this.peopleObservable = this.getPeopleObservable();
+    this.peoplePageObservable = this.getPeoplePageObservable();
     this.speciesOptionsObservable = this.getSpeciesOptionsObservable();
     this.filmsOptionsObservable = this.getFilmsOptionsObservable();
     this.fromBirthDateOptionsObservable = this.getFromBirthDatesOptionsObservable();
     this.toBirthDateOptionsObservable = this.getToBirthDatesOptionsObservable();
+    this.paginationObservable = this.getPaginationObservable();
+    this.isSidebarVisible = window.innerWidth >= 1024;
   }
 
-  private getPeopleObservable() {
+  public clearFilters(): void {
+    this.filters.setValue(this.initialFilterValues)
+  }
+
+  public setActivePage(page: number): void {
+    this.activePageSubject.next(page);
+  }
+
+  private getPeopleObservable(): Observable<IPeopleListItem[]> {
     return combineLatest([
       this.swapiService.getPeopleObservable(),
-      this.filters.valueChanges.pipe(startWith(this.filters.value))
+      this.filters.valueChanges.pipe(
+        tap(values => {
+          this.showClearAllIcon = !Object.values(values).every(value => value === AllOption.value)
+        }),
+        startWith(this.filters.value))
     ]).pipe(map(([people, { film, specie, fromBirthDate, toBirthDate }]) => {
       return people.filter(person => {
         const birthDate = dateParser(person.birth_year);
@@ -48,6 +76,19 @@ export class CharactersListComponent {
           && (toBirthDate === AllOption.value || birthDate <= toBirthDate)
       });
     }));
+  }
+
+  private getPeoplePageObservable(): Observable<IPeopleListItem[]> {
+    return combineLatest([
+      this.peopleObservable,
+      this.activePageSubject
+    ]).pipe(
+      map(([people, page]) => {
+        const start: number = (page - 1) * this.MAX_PEOPLE_PER_PAGE;
+        const end: number = start + this.MAX_PEOPLE_PER_PAGE;
+        return people.slice(start, end);
+      })
+    )
   }
 
   private getSpeciesOptionsObservable(): Observable<ISelectOption[]> {
@@ -101,7 +142,7 @@ export class CharactersListComponent {
   }
 
   private getFromBirthDatesOptionsObservable(): Observable<ISelectOption[]> {
-    return this.swapiService.getPeopleObservable().pipe(
+    return this.peopleObservable.pipe(
       map(people => {
         const options = [...new Set(people.map(person => person.birth_year))].map(date => ({
           label: date,
@@ -122,7 +163,7 @@ export class CharactersListComponent {
   private getToBirthDatesOptionsObservable(): Observable<ISelectOption[]> {
     return combineLatest([
       this.fromBirthDateOptionsObservable,
-      this.filters.controls["fromBirthDate"].valueChanges
+      this.filters.controls["fromBirthDate"].valueChanges.pipe(startWith(this.filters.controls["fromBirthDate"].value))
     ]).pipe(map(([options, value]) => {
       const valueOptionIndex = options.findIndex(option => option.value.toString() === value);
       return [
@@ -133,11 +174,15 @@ export class CharactersListComponent {
   }
 
   private getFilters(): FormGroup {
-    return this.fb.group({
-      film: AllOption.value,
-      specie: AllOption.value,
-      fromBirthDate: AllOption.value,
-      toBirthDate: AllOption.value
-    });
+    return this.fb.group(this.initialFilterValues);
+  }
+
+  private getPaginationObservable() {
+    return this.peopleObservable.pipe(
+      map(people => {
+        const numberOfPages = Math.ceil(people.length / this.MAX_PEOPLE_PER_PAGE);
+        return Array.from(Array(numberOfPages).keys()).map(key => key + 1);
+      })
+    )
   }
 }

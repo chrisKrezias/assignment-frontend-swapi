@@ -1,6 +1,6 @@
 .sidebar {
   height: 100%;
-  width: 0;
+  width: 250px;
   position: fixed;
   z-index: 1;
   top: 0;
@@ -10,19 +10,25 @@
   transition: 0.5s;
   padding-top: 60px;
   color: white;
+  -webkit-box-shadow: 5px 5px 15px 5px rgba(0, 0, 0, 0.66);
+  box-shadow: 5px 5px 15px 5px rgba(0, 0, 0, 0.66);
+  transform: translateX(-250px);
 
   &.open {
-    width: 250px;
+    transform: translateX(0);
   }
 
   .close-btn {
-    all: unset;
-    cursor: pointer;
     position: absolute;
     top: 0;
     right: 25px;
     font-size: 36px;
     margin-left: 50px;
+  }
+
+  .footnote {
+    position: absolute;
+    bottom: 0;
   }
 }
 
@@ -34,7 +40,6 @@
   .open-btn {
     font-size: 20px;
     cursor: pointer;
-    background-color: #111;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -43,4 +48,14 @@
   &.open-sidebar {
     margin-left: 250px;
   }
+
+  .card {
+    width: 18rem;
+    cursor: pointer;
+  }
+}
+
+.unset-btn {
+  all: unset;
+  cursor: pointer;
 }
