@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Observable, of, switchMap } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 import { IPeopleResponseItem } from '../../models/swapi-response.model';
 import { SwapiService } from '../../services/swapi.service';
 
@@ -13,7 +13,7 @@ export class CharacterDetailsComponent {
   public personObservable: Observable<IPeopleResponseItem | null>;
   public showError = false;
 
-  constructor(private swapiService: SwapiService, private route: ActivatedRoute) {
+  constructor(private swapiService: SwapiService, private route: ActivatedRoute, private router: Router) {
     this.personObservable = this.getPersonObservable();
   }
 
@@ -22,6 +22,10 @@ export class CharacterDetailsComponent {
       switchMap(paramMap => {
         const id = paramMap.get("id");
         return id ? this.swapiService.getPersonObservable(id) : of(null);
+      }),
+      catchError((error) => {
+        this.router.navigate(["404"])
+        return throwError(() => error);
       })
     )
   }
