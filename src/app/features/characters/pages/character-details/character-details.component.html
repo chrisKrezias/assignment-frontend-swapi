@@ -1,3 +1,5 @@
+<a [routerLink]="'/'">Go to list</a>
+
 <ng-container *ngIf="!showError; else error">
   <ul *ngIf="(personObservable | async) as person; else loading">
     <li>Name: {{person.name}}</li>
